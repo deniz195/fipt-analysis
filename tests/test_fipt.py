@@ -16,7 +16,7 @@ def test_full_fit():
     df.head()
 
     ipdata =  fipt.ImpedanceData(fn, fn, 
-                       w_data = df['Frequency (Hz)'].values,  
+                       f_data = df['Frequency (Hz)'].values,  
                        z_real_data = df['Z\' (Ohms)'].values, 
                        z_imag_data = df['Z\" (Ohms)'].values)
 

@@ -74,16 +74,19 @@ def _reload_module():
 
 
 
-
-
 class ImpedanceData(object):
-    def __init__(self, name, base_filename, w_data, z_real_data=None, z_imag_data=None, z_data=None):
+    def __init__(self, name, base_filename, *, w_data=None, f_data=None, z_real_data=None, z_imag_data=None, z_data=None):
         self.logger = module_logger
 
         self.name = name
         self.base_filename = base_filename
 
-        self.w_data = w_data
+        if f_data is not None:
+            self.w_data = 2 * np.pi * f_data
+        elif w_data is not None:
+            self.w_data = w_data
+        else:
+            raise ValueError('Either w_data or f_data has to be given!')
 
         if z_data:
             self.z_data = z_data
