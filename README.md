@@ -1,6 +1,6 @@
 # FIPT: Fast impedance tortuosity 
 
-FIPT is a measurement technique that allows a fast determination of the ionic resistance for battery electrodes. The technique is based on the work by J. Landesfeind ([DOI: 10.1149/issn.1945-7111](https://dx.doi.org/10.1149/2.1141607jes)) and then optimized for execution speed at Battrion.
+FIPT is a measurement technique that allows a fast determination of the ionic resistance for battery electrodes. The technique is based on the work by J. Landesfeind ([DOI: 10.1149/issn.1945-7111](https://dx.doi.org/10.1149/2.1141607jes)) and then optimized for execution speed and reliability at [Battrion](https://battrion.com).
 
 The measurement setup can be built based on [https://github.com/deniz195/fipt](https://github.com/deniz195/fipt)
 
@@ -39,7 +39,7 @@ Format: CSV
 ```
 
 ## Examples 
-To see how to analyze fipt data in your own python code, refer to the jupyter notebook `demo_fipt.ipyn` in the examples folder.
+To see how to analyze fipt data in your own python code, refer to the jupyter notebook `demo_fipt.ipynb` in the examples folder.
 
 ## Features and known issues
 The code was optimized to allow the fitting and analysis of large numbers of data files, with minimum user intervention. The key features of the code are:
