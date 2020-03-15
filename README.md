@@ -62,5 +62,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+For questions please feel free to reach out to Deniz Bozyigit ([dbozyigit@battrion.com](mailto:dbozyigit@battrion.com))
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
