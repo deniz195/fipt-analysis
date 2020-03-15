@@ -6,7 +6,27 @@ The measurement setup can be built based on https://github.com/deniz195/fipt
 
 Once data has been aquired, this repository provides the data analysis and model fitting. 
 
-For examples refer to the jupyter notebook `demo_fipt.ipynb` in the examples folder.
+## Quick analysis
+If you want to quickly analyze your impedance data:
+
+Install:
+```bash
+pip install fipt
+```
+
+Put your impedance data in a file `my_fipt_data_1234.csv` in the following format: 
+CSV
+1st column: frequency in [Hz]
+2nd column: Z' in [Ohm]
+3rd column: Z'' in [Ohm]
+(You can also use the file `test_data_001.csv` in `examples` folder)
+
+```bash
+python -m fipt ./my_fipt_data_1234.csv
+```
+
+## Examples 
+To see how to analyze fipt data, refer to the jupyter notebook `demo_fipt.ipynb` in the examples folder.
 
 ## Quick installation
 To install the fipt-analysis, simply:

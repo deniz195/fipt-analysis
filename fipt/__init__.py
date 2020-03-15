@@ -348,13 +348,13 @@ class SymmetricImpedanceFitter(object):
         z_data = self.z_data.copy()
         
         if do_crop and (self.max_z_abs is not None):
-            self.logger.warning(f'Data is restricted to <{self.max_z_abs} Ohm')
+            self.logger.info(f'Data is restricted to |Z| < {self.max_z_abs} Ohm')
             data_sel = np.abs(z_data) < self.max_z_abs
             z_data = z_data[data_sel]
             w_data = w_data[data_sel]
 
         if do_crop and (self.min_w is not None):
-            self.logger.warning(f'Data is restricted to >{self.min_w} Hz')            
+            self.logger.info(f'Data is restricted to >{self.min_w} rad/s')            
             data_sel = w_data > self.min_w
             z_data = z_data[data_sel]
             w_data = w_data[data_sel]            
