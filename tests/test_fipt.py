@@ -14,7 +14,7 @@ def gather_filenames():
     filenames = list(p.glob('**/*.csv'))
     return filenames
 
-def fit_filename(fn):
+def fit_filename(fn, params=None):
     df = pd.read_csv(fn)
     df.head()
 
@@ -39,9 +39,13 @@ def fit_filename(fn):
 
     # manual configuration of parameters
     start_params_1 = start_params
-    # start_params_1['gamma'].set(value=0.916)
-    # start_params_1['r_ion'].set(value=50)
-    # start_params_1['q_s'].set(value=0.004)
+
+    if params is not None:
+        for key,val in params.items():
+            start_params[key].set(value=val)
+        # start_params_1['gamma'].set(value=0.916)
+        # start_params_1['r_ion'].set(value=50)
+        # start_params_1['q_s'].set(value=0.004)
 
     # symimfit.plot_fit(params=start_params_1);        
     #         symimfit.set_max_z_abs(250)
@@ -60,6 +64,19 @@ def fit_filename(fn):
 
 def test_full_fit():
     fn = str(Path(current_dir).joinpath('test_data_001.csv'))
+    fit_filename(fn)
+
+
+def test_full_fit_with_params():
+    fn = str(Path(current_dir).joinpath('data','test_data_004.csv'))
+    params = {"gamma":0.916, "r_ion":79}
+    # result = fit_filename(fn, params)
+    result = fit_filename(fn)
+    assert result.chisqr < 200
+
+
+def test_empty_dataset():
+    fn = str(Path(current_dir).joinpath('test_empty_data.csv'))
     fit_filename(fn)
 
 
