@@ -77,7 +77,8 @@ def test_full_fit_with_params():
 
 def test_empty_dataset():
     fn = str(Path(current_dir).joinpath('test_empty_data.csv'))
-    fit_filename(fn)
+    with pytest.raises(ValueError, match=r".* not enough data points .*"):
+        fit_filename(fn)
 
 
 @pytest.mark.parametrize('fn', gather_filenames())
