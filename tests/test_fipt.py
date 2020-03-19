@@ -57,7 +57,7 @@ def fit_filename(fn, params=None):
     f, ax = symimfit.plot_fit(start_params = start_params_1);
     # f.show()
 
-    symimfit.save_results()
+    symimfit.save_results(plot_figure=f)
 
     return result
 
