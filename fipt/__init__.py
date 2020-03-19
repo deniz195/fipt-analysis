@@ -104,6 +104,8 @@ class ImpedanceData(object):
 # this class is structured similar to lmfit.Model
 class SymmetricImpedanceFitter(object):
 
+    _min_datapoints = 5
+
     @staticmethod
     def z_symmetric_impedance(w, r_sep, r_ion, gamma, q_s):
         z = ((r_ion / (q_s * (1j * w) ** gamma)) ** (1 / 2)) * \
@@ -134,21 +136,14 @@ class SymmetricImpedanceFitter(object):
             
         return params
 
-    def __init__(self, name=None, base_file_name=None, w_data=None, z_data=None, 
-                 impedance_data=None, 
+    def __init__(self, impedance_data, 
                  model='normal', 
                  likelihood_config = dict(name='normal', scale=1)):      
         
         
         self.logger = module_logger
 
-        if impedance_data is None:
-            self.name = name
-            self.w_data = w_data
-            self.z_data = z_data
-            self.base_file_name = base_file_name
-        else:
-            self.load_data(impedance_data)
+        self.load_data(impedance_data)
 
         self.show_guess_plots = False
         
@@ -171,9 +166,13 @@ class SymmetricImpedanceFitter(object):
         self.last_params = self.make_params()
 
     def load_data(self, impedance_data):
-        self.name = impedance_data.name
+        
+        if len(impedance_data.w_data) < self._min_datapoints:
+            raise ValueError(f'Impedance data has not enough data points! Need >= {self._min_datapoints}')            
+
         self.w_data = impedance_data.w_data
         self.z_data = impedance_data.z_data
+        self.name = impedance_data.name
         self.base_file_name = impedance_data.base_filename
 
     def sanitize_data(self):
