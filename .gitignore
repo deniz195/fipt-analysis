@@ -139,3 +139,4 @@ env_test
 tests/test_data_001.csv.fit*
 tests/test_fipt.ipynb
 examples/demo_results/
+tests/data/*.fit.*
