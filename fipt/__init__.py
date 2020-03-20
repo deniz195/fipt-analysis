@@ -296,8 +296,8 @@ class SymmetricImpedanceFitter(object):
         # params['r_low'].set(value = - low_intercept / low_slope)
         r_low = - low_intercept / low_slope
         params['r_ion'].set(value = (r_low - params['r_sep']) * 3)
-        params['gamma'].set(value = high_slope)
-        params['q_s'].set(value = 0.018)
+        params['gamma'].set(value = np.arctan(low_slope)/(np.pi/2))
+        params['q_s'].set(value = 0.002)
 
         if self.model == 'with_short':
             params['r_short'].set(value = 10*np.max(z_data.real))
