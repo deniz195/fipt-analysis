@@ -45,8 +45,9 @@ except ModuleNotFoundError:
 
 # from .elan.impedance import SquidStatEISImporter, SymmetricImpedanceFitter, ComplexImpedancePlotter # formerly known as 'iman'
 
-from .plotting import ComplexImpedancePlotter, ImpedanceVsFreqPlotter
 from .helpers import round_to_n, make_log_likelihood_function, make_complex_model_wrapper
+from .impedance_data import ImpedanceData
+from .plotting import ComplexImpedancePlotter, ImpedanceVsFreqPlotter
 
 
 __all__ = ['FastImpedanceRawData', 'FastImpedancePrimaryAnalyzer', 'FastImpedanceSingleTrace',
@@ -64,47 +65,19 @@ def _reload_module():
     current_module = sys.modules[__name__]
     module_logger.info('Reloading module %s' % __name__)
     importlib.reload(current_module)
-
-
-
-    
+   
     
 
 
 
 
-
-class ImpedanceData(object):
-    def __init__(self, name, base_filename, *, w_data=None, f_data=None, z_real_data=None, z_imag_data=None, z_data=None):
-        self.logger = module_logger
-
-        self.name = name
-        self.base_filename = base_filename
-
-        if f_data is not None:
-            self.w_data = 2 * np.pi * f_data
-        elif w_data is not None:
-            self.w_data = w_data
-        else:
-            raise ValueError('Either w_data or f_data has to be given!')
-
-        if z_data:
-            self.z_data = z_data
-        elif z_real_data is not None and z_imag_data is not None:
-            self.z_data = z_real_data + 1j*z_imag_data
-        else:
-            raise ValueError('Either z_data or z_real_data and z_imag_data have to be given!')
-
-        if len(self.z_data) != len(self.w_data):
-            raise ValueError('Data for z_data and w_data need to have same length!')            
-
-            
 
 
 # this class is structured similar to lmfit.Model
 class SymmetricImpedanceFitter(object):
 
     _min_datapoints = 5
+    result_fns = None
 
     @staticmethod
     def z_symmetric_impedance(w, r_sep, r_ion, gamma, q_s):
@@ -360,15 +333,43 @@ class SymmetricImpedanceFitter(object):
             
         return {'x': w_data, 'data': z_data, 'eps': 1}
         
-    def fit_auto(self, start_params=None, crop_data = True, crop_multiple = 6):
-        if start_params is None:
-            start_params = self.guess()
+    def fit_auto(self, start_params=None, crop_data = True, crop_multiple = 6, 
+                       max_z_abs = 400, save_results = True, display_results=False,
+                       export_folder=None, plot_save_kwds = {}, 
+                       likelihood_config = dict(name='t', scale=1, df=1)):
             
-        result = self.fit(start_params=start_params)
+        self.sanitize_data()
+
+        # restrict data range
+        self.set_min_w(None)
+        self.set_max_z_abs(max_z_abs)
+
+        # use student t likelihood function
+        self.configure_likelihood(likelihood_config=likelihood_config)
+
+        # guess start parameters
+        start_params_1 = self.guess(make_plots=False)
+
+        # apply manual overrides
+        if start_params:
+            for key, val in start_params.items():
+                start_params_1[key].set(value=val)
+
+        result = self.fit()        
         
-        self.set_max_z_abs(crop_multiple * self.last_params['r_ion'])
+        if save_results or display_results:
+            fit_report_str = lmfit.fit_report(result, show_correl=False)
+            f, ax = self.plot_fit(start_params = start_params_1);
         
-        result = self.fit()
+        if display_results:
+            self.logger.info(fit_report_str)
+            f.show()
+
+        if save_results:
+            self.result_fns = self.save_results(export_folder=export_folder, plot_save_kwds=plot_save_kwds,plot_figure=f)
+        else:
+            self.result_fns = None
+
         
         return result        
         

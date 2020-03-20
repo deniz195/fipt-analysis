@@ -22,9 +22,14 @@ import fipt
 
 
 fn = sys.argv[1]
-assert Path(fn).exists()
+fn = str(Path(fn).resolve().absolute())
+
+if not Path(fn).exists():
+	raise FileNotFoundError(fn)
 
 module_logger.info(f'Loading {fn}')
+
+
 
 df = pd.read_csv(fn)
 ipdata =  fipt.ImpedanceData(fn, fn, 
@@ -34,30 +39,11 @@ ipdata =  fipt.ImpedanceData(fn, fn,
 
 
 symimfit = fipt.SymmetricImpedanceFitter(impedance_data=ipdata)        
-symimfit.sanitize_data()
 
-# restrict data range
-symimfit.set_min_w(None)
-symimfit.set_max_z_abs(400)
+result = symimfit.fit_auto()
 
-# use student t likelihood function
-symimfit.configure_likelihood(likelihood_config=dict(name='t', scale=1, df=1))
-
-# guess start parameters
-start_params = symimfit.guess(make_plots=False)
-
-result = symimfit.fit()        
-
-fit_report_str = fipt.lmfit.fit_report(result, show_correl=False)
-module_logger.info(fit_report_str)
-
-f, ax = symimfit.plot_fit(start_params = start_params);
-# f.show()
-
-result_fns = symimfit.save_results()
-
-for result_fn in result_fns:
-    if result_fn:
-        module_logger.info(f'Result written to {result_fn}')
-
+if symimfit.result_fns:
+	for result_fn in symimfit.result_fns:
+	    if result_fn:
+	        module_logger.info(f'Result written to {result_fn}')
 
