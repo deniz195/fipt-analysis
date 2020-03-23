@@ -26,7 +26,7 @@ pip install fipt
 Put the test data `test_data_001.csv` from the `examples` folder in your current folder. Analyze the data:
 
 ```bash
-python -m fipt ./my_fipt_data_1234.csv
+python -m fipt ./test_data_001.csv
 ```
 
 To analyze your own data, put it in a file with the same format as `test_data_001.csv`, which is:

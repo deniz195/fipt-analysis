@@ -18,11 +18,11 @@ setup(
     url='https://github.com/deniz195/fipt-analysis',
     license="MIT",
     packages=find_packages(exclude=('tests', 'docs', 'examples', 'demo_results')),
-    install_requires = ['lmfit', 'numpy', 'scipy', ],
+    install_requires = ['lmfit>=1.0.0', 'numpy>=1.16.5', 'scipy>=1.3.1', ],
     extras_require={
         'dev': [
-            'pandas',
-            'pytest',
+            'pandas>=0.25.1',
+            'pytest>=5.2.1',
         ], 
     },    
     classifiers=[
