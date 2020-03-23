@@ -12,4 +12,5 @@ def gather_filenames():
 @pytest.mark.parametrize('fn', gather_filenames())
 def test_chisqr(fn):
     result = fit_file(str(fn))
-    assert result.chisqr < 200
+    assert result.chisqr < 300
+

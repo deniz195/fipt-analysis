@@ -25,7 +25,7 @@ fn = sys.argv[1]
 fn = str(Path(fn).resolve().absolute())
 
 if not Path(fn).exists():
-	raise FileNotFoundError(fn)
+    raise FileNotFoundError(fn)
 
 module_logger.info(f'Loading {fn}')
 
@@ -40,10 +40,10 @@ ipdata =  fipt.ImpedanceData(fn, fn,
 
 symimfit = fipt.SymmetricImpedanceFitter(impedance_data=ipdata)        
 
-result = symimfit.fit_auto()
+result = symimfit.fit_auto(debug=True)
 
 if symimfit.result_fns:
-	for result_fn in symimfit.result_fns:
-	    if result_fn:
-	        module_logger.info(f'Result written to {result_fn}')
+    for result_fn in symimfit.result_fns:
+        if result_fn:
+            module_logger.info(f'Result written to {result_fn}')
 

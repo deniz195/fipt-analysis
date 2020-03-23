@@ -19,6 +19,13 @@ import fipt
 from fipt.impedance_data import load_test_data_csv
 
 
+def build_symmetric_impedance_fitter_from_file(fn, params=None):
+    ipdata =  load_test_data_csv(fn)
+
+    symimfit = fipt.SymmetricImpedanceFitter(impedance_data=ipdata)        
+    return symimfit
+
+
 
 def fit_file(fn, params=None):
     ipdata =  load_test_data_csv(fn)
