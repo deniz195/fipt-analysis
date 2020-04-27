@@ -178,11 +178,13 @@ class SymmetricImpedanceFitter(object):
         self.model = model
         if model == 'normal':
             self.z_model = self.z_symmetric_impedance
+            self.logger.info(f'Analytic model "{model}" set!')
         elif model == 'with_short':
             self.z_model = self.z_symmetric_impedance_w_short
+            self.logger.info(f'Analytic model "{model}" set!')
         else:
             self.z_model = None
-            self.logger.warning(f'Model "{model}" not supported!')
+            self.logger.warning(f'Analytic model "{model}" not supported!')
 
     def configure_likelihood(self, likelihood_config = dict(name='normal', scale=1)):
         llf = make_log_likelihood_function(**likelihood_config)
@@ -197,17 +199,11 @@ class SymmetricImpedanceFitter(object):
 #        else:
 #            self.logger.warning(f'Model "{model}" not supported!')
         
-    def estimate_transition_frequency(self, w_data=None, z_data=None, make_plots=None):
+    def estimate_transition_frequency(self, w_data, z_data, make_plots=None):
         ''' This function estimates the transition frequency 
         that corresponds to the kink in the symmetric impedance
         plot.
         '''
-        if z_data is None:
-            z_data = self.z_data    
-        
-        if w_data is None:
-            w_data = self.w_data    
-
         if make_plots is None:
             make_plots = self.show_guess_plots
         
@@ -238,11 +234,51 @@ class SymmetricImpedanceFitter(object):
             # ax.plot(z_data_diff.real, -z_data_diff.imag)
             ax.plot(z_angle_pos, z_angle_int, 'o')        
             
+        if z_angle_max_i == 0 or z_angle_max_i == len(z_angle_int):
+            module_logger.warning('transition frequeny could not be determined!')
+            w_trans = None
+
         return w_trans
 
 
+    def assess_data(self, w_data=None, z_data=None, make_plots=None):
 
-       
+        if z_data is None:
+            z_data = self.z_data    
+        
+        if w_data is None:
+            w_data = self.w_data    
+
+        if make_plots is None:
+            make_plots = self.show_guess_plots
+
+        if plt is None and make_plots:
+            self.logger.error(f'Matplotlib not available. Cannot make plots!')
+            make_plots = False
+
+        # determine transition frequency, where the kink happens
+        w_trans = self.estimate_transition_frequency(w_data, z_data, make_plots=make_plots)
+
+        # determine if there is a short in the measurement
+        w_min_i = np.argmin(w_data)
+        z_lf_angle = np.angle(z_data[w_min_i])
+        z_angle_min = np.min(np.angle(z_data))
+
+        has_short = False
+        # has_short |=  z_lf_angle > z_angle_min          # if angle goes up at low frequencies, probably shorted
+        has_short |=  (z_lf_angle * 180 / np.pi) > -50  # if the sample is not capacitive enough, probably shorted!
+
+        assessment = dict(w_trans=w_trans, 
+                          has_w_trans = w_trans is not None,
+                          has_short=has_short, )
+
+        self.logger.info(f'Data assessment: {assessment}')
+
+        return assessment
+
+
+
+
     def guess(self, w_data=None, z_data=None, make_plots=None):
         if z_data is None:
             z_data = self.z_data    
@@ -257,51 +293,63 @@ class SymmetricImpedanceFitter(object):
             self.logger.error(f'Matplotlib not available. Cannot make plots!')
             make_plots = False
 
-        w_trans = self.estimate_transition_frequency(w_data, z_data, make_plots=make_plots)
-        w_factor = 1.4
-        w_low_top = w_trans / w_factor
-        w_high_bottom = w_trans * w_factor
-
-        z_data_high = np.extract(w_data > w_high_bottom, z_data)
-        z_data_low = np.extract(w_data < w_low_top, z_data)
-        
-        high_slope,high_intercept, high_r_value, high_p_value, high_std_err = \
-            sp.stats.linregress(z_data_high.real, -z_data_high.imag)
-        
-        low_slope, low_intercept, low_r_value, low_p_value, low_std_err = \
-            sp.stats.linregress(z_data_low.real, -z_data_low.imag)
-
-        if make_plots:
-            fit_high_imag = z_data_high.real * high_slope + high_intercept
-            fit_low_imag = z_data_low.real * low_slope + low_intercept
-
-            f, ax = plt.subplots()
-            # ax.plot(z_data.real, -z_data.imag, marker = 'o', label = 'data')
-            ax.plot(z_data_high.real, -z_data_high.imag,  marker = 'o', label = 'high ω data')
-            ax.plot(z_data_low.real, -z_data_low.imag,  marker = 'o',  label = 'low ω data')
-            ax.plot(z_data_high.real, fit_high_imag,  label = 'high ω fit')
-            ax.plot(z_data_low.real, fit_low_imag,  label = 'low ω fit')
-            ax.set_aspect('equal')
-            ax.set_adjustable('datalim')
-
-            ax.set_title('Two part linear fit estimation')
-            ax.set_xlabel('Re(Z) (Ω)', fontsize = 18)
-            ax.set_ylabel('-Im(Z) (Ω)', fontsize = 18)
-            ax.legend()
-            f.tight_layout()
-            
-
+        # setup parameters
         params  = self.make_params()
-        params['r_sep'].set(value = - high_intercept / high_slope)
-        # params['r_low'].set(value = - low_intercept / low_slope)
-        r_low = - low_intercept / low_slope
-        params['r_ion'].set(value = (r_low - params['r_sep']) * 3)
-        params['gamma'].set(value = np.arctan(low_slope)/(np.pi/2))
+        params['r_sep'].set(value = 2*np.min(np.abs(z_data.real)))
+        params['r_ion'].set(value = 10*2*np.min(np.abs(z_data.real)))
+        params['gamma'].set(value = 0.8)
         params['q_s'].set(value = 0.002)
 
         if self.model == 'with_short':
             params['r_short'].set(value = 10*np.max(z_data.real))
         
+
+        # improve estimation
+        w_trans = self.estimate_transition_frequency(w_data, z_data, make_plots=make_plots)
+        if w_trans is None:
+            self.logger.error(f'Could not determine transition frequency! Might not be a valid dataset!')
+        else:
+            w_factor = 1.4
+            w_low_top = w_trans / w_factor
+            w_high_bottom = w_trans * w_factor
+
+            z_data_high = np.extract(w_data > w_high_bottom, z_data)
+            z_data_low = np.extract(w_data < w_low_top, z_data)
+            
+            high_slope,high_intercept, high_r_value, high_p_value, high_std_err = \
+                sp.stats.linregress(z_data_high.real, -z_data_high.imag)
+            
+            low_slope, low_intercept, low_r_value, low_p_value, low_std_err = \
+                sp.stats.linregress(z_data_low.real, -z_data_low.imag)
+
+            if make_plots:
+                fit_high_imag = z_data_high.real * high_slope + high_intercept
+                fit_low_imag = z_data_low.real * low_slope + low_intercept
+
+                f, ax = plt.subplots()
+                # ax.plot(z_data.real, -z_data.imag, marker = 'o', label = 'data')
+                ax.plot(z_data_high.real, -z_data_high.imag,  marker = 'o', label = 'high ω data')
+                ax.plot(z_data_low.real, -z_data_low.imag,  marker = 'o',  label = 'low ω data')
+                ax.plot(z_data_high.real, fit_high_imag,  label = 'high ω fit')
+                ax.plot(z_data_low.real, fit_low_imag,  label = 'low ω fit')
+                ax.set_aspect('equal')
+                ax.set_adjustable('datalim')
+
+                ax.set_title('Two part linear fit estimation')
+                ax.set_xlabel('Re(Z) (Ω)', fontsize = 18)
+                ax.set_ylabel('-Im(Z) (Ω)', fontsize = 18)
+                ax.legend()
+                f.tight_layout()
+                
+
+            params['r_sep'].set(value = - high_intercept / high_slope)
+            # params['r_low'].set(value = - low_intercept / low_slope)
+            r_low = - low_intercept / low_slope
+            params['r_ion'].set(value = (r_low - params['r_sep']) * 3)
+            params['gamma'].set(value = np.arctan(low_slope)/(np.pi/2))
+            
+
+
         self.last_params = params        
 
         return params
@@ -335,8 +383,10 @@ class SymmetricImpedanceFitter(object):
         
     def fit_auto(self, start_params=None, crop_data = True, crop_multiple = 6, 
                        max_z_abs = 400, save_results = True, display_results=False,
+                       auto_model = True,
                        export_folder=None, plot_save_kwds = {}, 
-                       likelihood_config = dict(name='t', scale=1, df=1)):
+                       likelihood_config = dict(name='t', scale=1, df=1),
+                       debug=False):
             
         self.sanitize_data()
 
@@ -344,11 +394,23 @@ class SymmetricImpedanceFitter(object):
         self.set_min_w(None)
         self.set_max_z_abs(max_z_abs)
 
+
+
+
+        # assess dataset 
+        assessment = self.assess_data(make_plots=debug)
+
+        if auto_model:
+            # choose right model
+            if assessment['has_short']:
+                self.configure_model('with_short')
+
         # use student t likelihood function
         self.configure_likelihood(likelihood_config=likelihood_config)
 
+
         # guess start parameters
-        start_params_1 = self.guess(make_plots=False)
+        start_params_1 = self.guess(make_plots=debug)
 
         # apply manual overrides
         if start_params:
