@@ -30,7 +30,13 @@ assessment_table_raw = [
 {'w_trans': 29.87453551634064, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_018.csv'},
 {'w_trans': 5.960751086771051, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_019.csv'},
 {'w_trans': 23.730145772596643, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_020.csv'},
+{'w_trans': 9.447083268609866, 'z_w_trans': 97.91536372750704,  'has_w_trans': True, 'has_short': False, 'filename': 'test_data_021.csv'},
+{'w_trans': 9.447083268609866, 'z_w_trans': 100.57760065670685, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_022.csv'},
+{'w_trans': 9.447083268609866, 'z_w_trans': 101.40128345262697, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_023.csv'},
+{'w_trans': 23.730145772596643, 'z_w_trans': 91.34686924990916, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_024.csv'},
+{'w_trans': 23.730145772596643, 'z_w_trans': 83.79607480878802, 'has_w_trans': True, 'has_short': False, 'filename': 'test_data_025.csv'},
 ]
+
 
 assessment_table = {a['filename']: a for a in assessment_table_raw}
 
@@ -39,18 +45,17 @@ assessment_table = {a['filename']: a for a in assessment_table_raw}
 def test_assessment(fn):
     fn_simple = str(Path(fn).name)
 
-    if fn_simple not in assessment_table:
-    	module_logger.warning(f'No assesment data available for {fn_simple}! Skip!')
-    	return True
-
     symimfit =  build_symmetric_impedance_fitter_from_file(fn)
     assessment = symimfit.assess_data()
     assessment['filename'] = fn_simple
 
-    # print(assessment)
+    if fn_simple not in assessment_table:
+        module_logger.error(f'No assesment data available for {fn_simple}! Skip!')
+        module_logger.error(assessment)
 
-    for k, v in assessment_table[fn_simple].items():
-        assert v == assessment[k], f'Failed on property: {k}'
+    else:
+        for k, v in assessment_table[fn_simple].items():
+            assert v == assessment[k], f'Failed on property: {k}'
 
 
 
