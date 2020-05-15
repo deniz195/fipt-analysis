@@ -9,7 +9,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='fipt',
-    version='0.1.2dev',
+    version='0.2.0',
     description='A python module to analyze fast impedance tortuosity measurements.',
     long_description=readme,
     long_description_content_type='text/markdown',   
@@ -31,5 +31,6 @@ setup(
         'License :: OSI Approved :: MIT License',  
         'Programming Language :: Python :: 3',     
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
       ],    
 )
