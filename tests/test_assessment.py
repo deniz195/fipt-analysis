@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from conftest import fit_file, current_dir, build_symmetric_impedance_fitter_from_file
+from conftest import module_logger, fit_file, current_dir, build_symmetric_impedance_fitter_from_file
 
 def gather_filenames():
     p = Path(current_dir).joinpath('data')
@@ -38,6 +38,10 @@ assessment_table = {a['filename']: a for a in assessment_table_raw}
 @pytest.mark.parametrize('fn', gather_filenames())
 def test_assessment(fn):
     fn_simple = str(Path(fn).name)
+
+    if fn_simple not in assessment_table:
+    	module_logger.warning(f'No assesment data available for {fn_simple}! Skip!')
+    	return True
 
     symimfit =  build_symmetric_impedance_fitter_from_file(fn)
     assessment = symimfit.assess_data()

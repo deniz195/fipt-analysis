@@ -79,6 +79,10 @@ class SymmetricImpedanceFitter(object):
     _min_datapoints = 5
     result_fns = None
 
+    assessment_min_z_lf_angle = -50 # degree
+    assessment_max_z_abs_multiplier = 6 # by how much is the resistance at the transition frequency multiplied to get a good max_z_abs estimator
+
+
     @staticmethod
     def z_symmetric_impedance(w, r_sep, r_ion, gamma, q_s):
         z = ((r_ion / (q_s * (1j * w) ** gamma)) ** (1 / 2)) * \
@@ -266,17 +270,27 @@ class SymmetricImpedanceFitter(object):
 
         has_short = False
         # has_short |=  z_lf_angle > z_angle_min          # if angle goes up at low frequencies, probably shorted
-        has_short |=  (z_lf_angle * 180 / np.pi) > -50  # if the sample is not capacitive enough, probably shorted!
+        has_short |=  (z_lf_angle * 180 / np.pi) > self.assessment_min_z_lf_angle  # if the sample is not capacitive enough, probably shorted!
+
+
+        if w_trans is not None:
+            w_trans_i = np.argmin(np.abs(w_data-w_trans))
+            z_w_trans = np.abs(z_data)[w_trans_i]
+            max_z_abs = self.assessment_max_z_abs_multiplier*z_w_trans,
+        else:
+            z_w_trans = None
+            max_z_abs = None 
+
 
         assessment = dict(w_trans=w_trans, 
+                          z_w_trans=z_w_trans,
+                          max_z_abs=max_z_abs,
                           has_w_trans = w_trans is not None,
                           has_short=has_short, )
 
         self.logger.info(f'Data assessment: {assessment}')
 
         return assessment
-
-
 
 
     def guess(self, w_data=None, z_data=None, make_plots=None):
@@ -382,19 +396,13 @@ class SymmetricImpedanceFitter(object):
         return {'x': w_data, 'data': z_data, 'eps': 1}
         
     def fit_auto(self, start_params=None, crop_data = True, crop_multiple = 6, 
-                       max_z_abs = 400, save_results = True, display_results=False,
+                       max_z_abs = None, save_results = True, display_results=False,
                        auto_model = True,
                        export_folder=None, plot_save_kwds = {}, 
                        likelihood_config = dict(name='t', scale=1, df=1),
                        debug=False):
             
         self.sanitize_data()
-
-        # restrict data range
-        self.set_min_w(None)
-        self.set_max_z_abs(max_z_abs)
-
-
 
 
         # assess dataset 
@@ -404,6 +412,12 @@ class SymmetricImpedanceFitter(object):
             # choose right model
             if assessment['has_short']:
                 self.configure_model('with_short')
+
+        # restrict data range
+        self.set_min_w(None)
+
+        max_z_abs = max_z_abs or assessment['max_z_abs']
+        self.set_max_z_abs(max_z_abs)
 
         # use student t likelihood function
         self.configure_likelihood(likelihood_config=likelihood_config)
@@ -482,6 +496,13 @@ class SymmetricImpedanceFitter(object):
         else:
             plot_params = False
 
+
+        if self.max_z_abs is not None:
+            data_limited = self._get_current_fit_data()             
+            z_data_limited = data_limited['data']
+            w_data_limited = data_limited['x']
+
+
         f, axes = plt.subplots(nrows=1, ncols=3, figsize=(18, 6))
 
         plot_opts_data = dict( marker = 'o', label='data')
@@ -492,7 +513,6 @@ class SymmetricImpedanceFitter(object):
         impax = ComplexImpedancePlotter(axes[0], plot_title)
         impax.plot_complex(z_data, **plot_opts_data)
         if self.max_z_abs is not None:
-            z_data_limited = self._get_current_fit_data()['data']
             impax.plot_complex(z_data_limited, **plot_opts_data_selected)
         
         if not data_only:
@@ -503,6 +523,9 @@ class SymmetricImpedanceFitter(object):
 
         impax = ImpedanceVsFreqPlotter(axes[1], plot_title)
         impax.plot_abs(w_data, z_data, **plot_opts_data)
+        if self.max_z_abs is not None:
+            impax.plot_abs(w_data_limited, z_data_limited, **plot_opts_data_selected)
+
         if not data_only:
             impax.plot_abs(w_data, z_data_fit, **plot_opts_fit)
             if z_data_fit_start is not None:
@@ -511,6 +534,9 @@ class SymmetricImpedanceFitter(object):
 
         impax = ImpedanceVsFreqPlotter(axes[2], plot_title)
         impax.plot_angle(w_data, z_data, **plot_opts_data)
+        if self.max_z_abs is not None:
+            impax.plot_angle(w_data_limited, z_data_limited, **plot_opts_data_selected)
+
         if not data_only:
             impax.plot_angle(w_data, z_data_fit, **plot_opts_fit)
             if z_data_fit_start is not None:
