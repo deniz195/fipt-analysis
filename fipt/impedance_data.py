@@ -14,7 +14,7 @@ class ImpedanceData(object):
         else:
             raise ValueError('Either w_data or f_data has to be given!')
 
-        if z_data:
+        if z_data is not None:
             self.z_data = z_data
         elif z_real_data is not None and z_imag_data is not None:
             self.z_data = z_real_data + 1j*z_imag_data
@@ -26,16 +26,3 @@ class ImpedanceData(object):
 
           
 
-            
-
-def load_test_data_csv(fn):
-    import pandas as pd
-
-    df = pd.read_csv(fn)
-    df.head()
-
-    ipdata =  ImpedanceData(fn, fn, 
-                       f_data = df['Frequency (Hz)'].values,  
-                       z_real_data = df['Z\' (Ohms)'].values, 
-                       z_imag_data = df['Z\" (Ohms)'].values)    
-    return ipdata

@@ -16,7 +16,22 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir) 
 
 import fipt
-from fipt.impedance_data import load_test_data_csv
+from fipt import ImpedanceData
+# from fipt.impedance_data import load_test_data_csv
+
+            
+
+def load_test_data_csv(fn):
+    import pandas as pd
+
+    df = pd.read_csv(fn)
+    df.head()
+
+    ipdata =  ImpedanceData(fn, fn, 
+                       f_data = df['Frequency (Hz)'].values,  
+                       z_real_data = df['Z\' (Ohms)'].values, 
+                       z_imag_data = df['Z\" (Ohms)'].values)    
+    return ipdata
 
 
 def build_symmetric_impedance_fitter_from_file(fn, params=None):
