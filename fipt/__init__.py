@@ -327,25 +327,51 @@ class SymmetricImpedanceFitter(object):
             w_low_top = w_trans / w_factor
             w_high_bottom = w_trans * w_factor
 
-            z_data_high = np.extract(w_data > w_high_bottom, z_data)
-            z_data_low = np.extract(w_data < w_low_top, z_data)
-            
-            high_slope,high_intercept, high_r_value, high_p_value, high_std_err = \
-                sp.stats.linregress(z_data_high.real, -z_data_high.imag)
-            
-            low_slope, low_intercept, low_r_value, low_p_value, low_std_err = \
-                sp.stats.linregress(z_data_low.real, -z_data_low.imag)
 
-            if make_plots:
+            # extract information from high frequency part
+            try:
+                z_data_high = np.extract(w_data > w_high_bottom, z_data)
+                
+                high_slope,high_intercept, high_r_value, high_p_value, high_std_err = \
+                    sp.stats.linregress(z_data_high.real, -z_data_high.imag)
+
+                params['r_sep'].set(value = - high_intercept / high_slope)
+
                 fit_high_imag = z_data_high.real * high_slope + high_intercept
+            except ValueError:
+                fit_high_imag = None
+                module_logger.warning('High frequency analysis failed!')            
+
+
+            # extract information from low frequency part
+            try:
+                z_data_low = np.extract(w_data < w_low_top, z_data)
+                
+                low_slope, low_intercept, low_r_value, low_p_value, low_std_err = \
+                    sp.stats.linregress(z_data_low.real, -z_data_low.imag)
+                
                 fit_low_imag = z_data_low.real * low_slope + low_intercept
 
+                # params['r_low'].set(value = - low_intercept / low_slope)
+                r_low = - low_intercept / low_slope
+                params['r_ion'].set(value = (r_low - params['r_sep']) * 3)
+                params['gamma'].set(value = np.arctan(low_slope)/(np.pi/2))
+            except ValueError:
+                fit_low_imag = None
+                module_logger.warning('Low frequency analysis failed!')                     
+
+
+            if make_plots:
                 f, ax = plt.subplots()
                 # ax.plot(z_data.real, -z_data.imag, marker = 'o', label = 'data')
                 ax.plot(z_data_high.real, -z_data_high.imag,  marker = 'o', label = 'high ω data')
                 ax.plot(z_data_low.real, -z_data_low.imag,  marker = 'o',  label = 'low ω data')
-                ax.plot(z_data_high.real, fit_high_imag,  label = 'high ω fit')
-                ax.plot(z_data_low.real, fit_low_imag,  label = 'low ω fit')
+
+                if fit_high_imag:
+                    ax.plot(z_data_high.real, fit_high_imag,  label = 'high ω fit')
+                if fit_low_imag:
+                    ax.plot(z_data_low.real, fit_low_imag,  label = 'low ω fit')
+
                 ax.set_aspect('equal')
                 ax.set_adjustable('datalim')
 
@@ -356,12 +382,6 @@ class SymmetricImpedanceFitter(object):
                 f.tight_layout()
                 
 
-            params['r_sep'].set(value = - high_intercept / high_slope)
-            # params['r_low'].set(value = - low_intercept / low_slope)
-            r_low = - low_intercept / low_slope
-            params['r_ion'].set(value = (r_low - params['r_sep']) * 3)
-            params['gamma'].set(value = np.arctan(low_slope)/(np.pi/2))
-            
 
 
         self.last_params = params        
