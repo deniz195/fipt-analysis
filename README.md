@@ -20,7 +20,7 @@ If you want to quickly analyze your impedance data:
 
 Install fipt-analysis:
 ```bash
-pip install fipt
+pip install fipt[full]
 ```
 
 Put the test data `test_data_001.csv` in your current folder ([download here](https://github.com/deniz195/fipt-analysis/raw/master/examples/test_data_001.csv) from the `examples` folder). Analyze the data:
@@ -57,7 +57,12 @@ Known issues:
 ## Requirements
 Required packages are `numpy`, `scipy` for data and statistical models and `lmfit` to perform the model fitting.
 
-It is recommended (but not necessary) to install matplotlib installed, so that fipt-analysis will be able to create plots of the fitting.
+It is recommended (but not necessary) to have pandas and matplotlib installed, so that fipt-analysis will be able to create plots of the fitting. These packages are automatically installed when using the install configuration `full`:
+
+```bash
+pip install fipt[full]
+```
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
