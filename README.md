@@ -23,7 +23,7 @@ Install fipt-analysis:
 pip install fipt
 ```
 
-Put the test data `test_data_001.csv` from the `examples` folder in your current folder. Analyze the data:
+Put the test data `test_data_001.csv` in your current folder ([download here](https://github.com/deniz195/fipt-analysis/blob/master/examples/test_data_001.csv) from the `examples` folder). Analyze the data:
 
 ```bash
 python -m fipt ./test_data_001.csv
