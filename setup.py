@@ -9,7 +9,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='fipt',
-    version='0.2.0',
+    version='0.3.0',
     description='A python module to analyze fast impedance tortuosity measurements.',
     long_description=readme,
     long_description_content_type='text/markdown',   
