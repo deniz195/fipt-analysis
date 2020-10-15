@@ -1,8 +1,14 @@
 # FIPT: Fast impedance tortuosity 
 
+## A fast way to get ionic resistance
+
 FIPT is a measurement technique that allows a fast determination of the ionic resistance for battery electrodes. The technique is based on the work by J. Landesfeind ([DOI: 10.1149/issn.1945-7111](https://dx.doi.org/10.1149/2.1141607jes)) and then optimized for execution speed and reliability at [Battrion](https://battrion.com).
 
 The measurement setup can be built based on [https://github.com/deniz195/fipt](https://github.com/deniz195/fipt)
+
+For a quick introduction to the measurement kit [check out our video here.](https://youtu.be/r1cBf72wSwA)
+
+## How to analyse the data?
 
 The data aquired in an FIPT measurement can be analyzed by the code in this repository. The code fits an analytical model to the data to determine the relevant parameters of the measurement:
 ```
@@ -14,6 +20,8 @@ q_s   - Capacitance factor
 ```
 
 The ionic resistance can be used to calculate the MacMullin number (and the tortuosity), which are important performance parameters of battery electrodes.
+
+For a quick introduction to the data analysis [check out our video here.](https://youtu.be/HwfMSETXJz8)
 
 ## Quick analysis
 If you want to quickly analyze your impedance data:
