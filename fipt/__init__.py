@@ -225,6 +225,7 @@ class SymmetricImpedanceFitter(object):
             f, ax = plt.subplots()
             ax.plot(z_angle_pos, z_angle, 'o')
             print('angle_mean: %f' % angle_mean)
+            plt.close(f)
 
         # determine the position of the step in angle
         # by the maximum of angle integral (with 0 mean!)
@@ -238,7 +239,8 @@ class SymmetricImpedanceFitter(object):
         if make_plots:
             f, ax = plt.subplots()
             # ax.plot(z_data_diff.real, -z_data_diff.imag)
-            ax.plot(z_angle_pos, z_angle_int, 'o')        
+            ax.plot(z_angle_pos, z_angle_int, 'o')
+            plt.close(f)
             
         if z_angle_max_i == 0 or z_angle_max_i == len(z_angle_int):
             module_logger.warning('transition frequeny could not be determined!')
@@ -356,6 +358,7 @@ class SymmetricImpedanceFitter(object):
                 ax.set_ylabel('-Im(Z) (Ω)', fontsize = 18)
                 ax.legend()
                 f.tight_layout()
+                plt.close(f)
                 
 
             params['r_sep'].set(value = - high_intercept / high_slope)
@@ -447,10 +450,9 @@ class SymmetricImpedanceFitter(object):
             f.show()
 
         if save_results:
-            self.result_fns = self.save_results(export_folder=export_folder, plot_save_kwds=plot_save_kwds,plot_figure=f)
+            self.result_fns = self.save_results(export_folder=export_folder, plot_save_kwds=plot_save_kwds, plot_figure=f)
         else:
             self.result_fns = None
-
         
         return result        
         
