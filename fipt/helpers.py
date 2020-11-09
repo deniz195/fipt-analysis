@@ -78,10 +78,10 @@ def make_log_likelihood_function(name='normal', scale=1, **kwds):
     norm_dist = sp.stats.norm
     
     if name in ['normal', 'norm']:
-        llf = norm_dist.logpdf
+        llf = lambda x: norm_dist.logpdf(x, scale=scale)
     elif name == 't':
         shape_df = kwds['df']
-        llf = lambda x: student_t.logpdf(x, shape_df)
+        llf = lambda x: student_t.logpdf(x, shape_df, scale=scale)
     else:
         raise ValueError(f'Invalid name for loglikelihood function: {name}')
 
