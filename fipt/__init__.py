@@ -195,6 +195,8 @@ class SymmetricImpedanceFitter(object):
 
         self.m_func, self.ll_func = make_complex_model_wrapper(self.z_model, 
                                                                likelihood_func = llf)
+
+        self.logger.info(f'Set likelihood configuration to {likelihood_config}')
         
 #        if model == 'normal':
 #            self.m_func, self.ll_func = make_complex_model_wrapper(self.z_symmetric_impedance)
@@ -276,7 +278,7 @@ class SymmetricImpedanceFitter(object):
         if w_trans is not None:
             w_trans_i = np.argmin(np.abs(w_data-w_trans))
             z_w_trans = np.abs(z_data)[w_trans_i]
-            max_z_abs = self.assessment_max_z_abs_multiplier*z_w_trans,
+            max_z_abs = self.assessment_max_z_abs_multiplier*z_w_trans
         else:
             z_w_trans = None
             max_z_abs = None 
@@ -371,11 +373,14 @@ class SymmetricImpedanceFitter(object):
        
     def set_max_z_abs(self, value):
         self.max_z_abs = value
-        self.logger.warning(f'Data is restricted to <{self.max_z_abs}Ohm. Reset with set_max_z_abs(None)')
+        if value:
+            self.logger.warning(f'Data is restricted to <{self.max_z_abs}Ohm. Reset with set_max_z_abs(None)')
 
     def set_min_w(self, value):
         self.min_w = value
-        self.logger.warning(f'Data is restricted to <{self.min_w}Ohm. Reset with set_min_w(None)')
+        if value:
+            self.logger.warning(f'Data is restricted to <{self.min_w} Hz. Reset with set_min_w(None)')
+
                 
     def _get_current_fit_data(self, do_crop=True):
         w_data = self.w_data.copy()
@@ -399,7 +404,7 @@ class SymmetricImpedanceFitter(object):
                        max_z_abs = None, save_results = True, display_results=False,
                        auto_model = True,
                        export_folder=None, plot_save_kwds = {}, 
-                       likelihood_config = dict(name='t', scale=1, df=1),
+                       likelihood_config = dict(name='t', scale=10, df=1),
                        debug=False):
             
         self.sanitize_data()
